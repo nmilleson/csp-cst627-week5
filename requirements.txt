@@ -1,0 +1,5 @@
+# torch is preinstalled on Colab; locally install it first from https://pytorch.org (CUDA build).
+numpy
+pandas
+openpyxl
+bitsandbytes>=0.45
