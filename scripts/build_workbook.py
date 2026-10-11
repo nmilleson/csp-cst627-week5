@@ -9,6 +9,10 @@ Sheets
     Recommendation  ranked recommendation + residual-risk register (decision cells)
     Protocol        how every number was measured, environment, dataset composition
 
+The decision cells (Board Rank/Verdict, Recommendation rows) are filled from
+results/recommendation.json when it exists; edit that file rather than the workbook so a
+rebuild never wipes the ranking.
+
 Board and Scaling are formulas, not pasted numbers: re-run benchmarks, re-run this script,
 and every figure updates. The Board reads the latest run of each config (Run ID column);
 type an older run_id there to pin a different run.
@@ -34,6 +38,8 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA_DIR, RESULTS_DIR, RUN_FIELDS, RUNS_CSV, WORKBOOK  # noqa: E402
+
+RECOMMENDATION = RESULTS_DIR / "recommendation.json"
 from configs import CONFIGS  # noqa: E402
 
 FONT = "Arial"
@@ -153,7 +159,7 @@ def runs_col(field: str, last: int) -> str:
     return f"Runs!${col}$2:${col}${last}"
 
 
-def build_board(wb, runs, last):
+def build_board(wb, runs, last, ranking):
     ws = wb.active
     ws.title = "Board"
     title(ws, "Brightline Logistics - In-Cab Model Trade-off Board",
@@ -218,8 +224,10 @@ def build_board(wb, runs, last):
         put(ws, f"P{r}", f"=IFERROR(J${first}/J{r},\"\")", fmt="0.00\"x\"")
         put(ws, f"Q{r}", f"=IFERROR(M${first}/M{r},\"\")", fmt="0.0\"x\"")
         put(ws, f"R{r}", f"=IF(F{r}=\"\",\"\",IF(AND(F{r}>=$B$7,J{r}<=$B$8,M{r}<=$B$9),\"PASS\",\"FAIL\"))")
-        put(ws, f"S{r}", None, BLUE, "0", fill=INPUT_FILL)
-        put(ws, f"T{r}", None, BLUE, fill=INPUT_FILL)
+        rank = next((k for k, e in enumerate(ranking, start=1) if e["config"] == name), None)
+        put(ws, f"S{r}", rank, BLUE, "0", fill=INPUT_FILL)
+        put(ws, f"T{r}", ranking[rank - 1]["verdict"] if rank else None, BLUE, fill=INPUT_FILL)
+        ws[f"T{r}"].alignment = Alignment(wrap_text=True, vertical="top")
         ws[f"D{r}"].alignment = Alignment(wrap_text=True, vertical="top")
     lastrow = first + len(NAMES) - 1
     ws[f"S{first}"].comment = Comment("Fill in 1 = ship this. Ranking rationale goes on the Recommendation sheet.",
@@ -288,7 +296,7 @@ def build_board(wb, runs, last):
     ws.add_chart(bc, f"I{note_row + 2}")
 
     set_widths(ws, {"A": 34, "B": 11, "C": 13, "D": 46, "E": 8, "F": 10, "G": 10, "H": 10, "I": 9, "J": 9,
-                    "K": 12, "L": 11, "M": 11, "N": 12, "O": 12, "P": 12, "Q": 12, "R": 10, "S": 7, "T": 40})
+                    "K": 12, "L": 11, "M": 11, "N": 12, "O": 12, "P": 12, "Q": 12, "R": 10, "S": 7, "T": 48})
     ws.freeze_panes = f"B{first}"
     return first, lastrow
 
@@ -414,10 +422,10 @@ def build_scaling(wb, avg_tokens):
     set_widths(ws, {"A": 44, "B": 22, "C": 24, "D": 22, "E": 26})
 
 
-def build_recommendation(wb, board_first, board_last):
+def build_recommendation(wb, board_first, board_last, ranking):
     ws = wb.create_sheet("Recommendation")
     title(ws, "Ranked recommendation and residual risks",
-          "Fill in after the Colab run. Rank 1 is the configuration to ship; ranks should match Board!S.")
+          "Rank 1 is the configuration to ship. Edit results/recommendation.json and rebuild to change it.")
     header_row(ws, 4, ["Rank", "Config", "Accuracy", "p95 ms", "Shipped MB", "Why (one line for Sandra)",
                        "Residual risks she accepts"])
     dv = DataValidation(type="list", formula1=f"=Board!$A${board_first}:$A${board_last}", allow_blank=True)
@@ -425,14 +433,16 @@ def build_recommendation(wb, board_first, board_last):
     for i in range(len(NAMES)):
         r = 5 + i
         put(ws, f"A{r}", i + 1, bold=True)
-        put(ws, f"B{r}", None, BLUE, fill=INPUT_FILL)
+        entry = ranking[i] if i < len(ranking) else {}
+        put(ws, f"B{r}", entry.get("config"), BLUE, fill=INPUT_FILL)
         dv.add(f"B{r}")
         rng = f"Board!$A${board_first}:$A${board_last}"
         for col, src, fmt in [("C", "F", "0.0%"), ("D", "J", "0.00"), ("E", "M", "0.00")]:
             put(ws, f"{col}{r}", f"=IF(B{r}=\"\",\"\",INDEX(Board!${src}${board_first}:${src}${board_last},"
                                  f"MATCH(B{r},{rng},0)))", GREEN, fmt)
-        put(ws, f"F{r}", None, BLUE, fill=INPUT_FILL)
-        put(ws, f"G{r}", None, BLUE, fill=INPUT_FILL)
+        put(ws, f"F{r}", entry.get("why"), BLUE, fill=INPUT_FILL)
+        put(ws, f"G{r}", entry.get("risks"), BLUE, fill=INPUT_FILL)
+        ws.row_dimensions[r].height = 66 if entry else 15
         for col in "FG":
             ws[f"{col}{r}"].alignment = Alignment(wrap_text=True, vertical="top")
     ws["B5"].comment = Comment("Pick a config from the list; accuracy / latency / size fill in from the Board.",
@@ -525,10 +535,14 @@ def main():
 
     wb = Workbook()
     last = build_runs(wb, runs)  # created first so other sheets can reference its size
-    first, lastrow = build_board(wb, runs, last)
+    ranking = json.loads(RECOMMENDATION.read_text())["ranking"] if RECOMMENDATION.exists() else []
+    unknown = [e["config"] for e in ranking if e["config"] not in CONFIGS]
+    if unknown:
+        sys.exit(f"{RECOMMENDATION} names unknown configs: {unknown}")
+    first, lastrow = build_board(wb, runs, last, ranking)
     build_training(wb, training)
     build_scaling(wb, avg_tokens)
-    build_recommendation(wb, first, lastrow)
+    build_recommendation(wb, first, lastrow, ranking)
     build_protocol(wb, card)
     wb.move_sheet("Board", offset=-wb.index(wb["Board"]))
 

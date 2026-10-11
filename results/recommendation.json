@@ -1,0 +1,29 @@
+{
+  "_note": "Hand-edited decision input for build_workbook.py (fills Board Rank/Verdict and the Recommendation sheet). Figures quoted are from the Tesla T4 run (run_ids eecf0fdd, 1610f4f4, 3d0f40a4, 6c3d1f09).",
+  "ranking": [
+    {
+      "config": "distilled_student",
+      "verdict": "SHIP. Same accuracy within noise, fastest, smallest, half the memory.",
+      "why": "-0.3 pts accuracy (7 of 2,493 test items, inside the ~0.65-pt standard error) for 1.6x faster p95 (mean of trials), 6.2x smaller download and half the peak memory of the baseline.",
+      "risks": "Driver-note accuracy is 72.7%, so roughly 1 in 4 spoken notes is misrouted unless the driver confirms it. Latency was measured on a T4 GPU, not the tablet. Document accuracy is on synthetic scans."
+    },
+    {
+      "config": "quant_4bit",
+      "verdict": "Runner-up. No accuracy loss and 4.6x smaller, but 2x slower on GPU and the tablet runtime is unproven.",
+      "why": "Matches baseline accuracy at 4.6x smaller, but bitsandbytes 4-bit is CUDA-only and unpacking weights makes single requests ~2x slower on the T4.",
+      "risks": "Needs a different int4 runtime on Android whose speed and accuracy are unmeasured; the GPU latency result may not carry over in either direction."
+    },
+    {
+      "config": "baseline",
+      "verdict": "Reference only. Accurate, but the largest download and memory footprint.",
+      "why": "Best-in-class accuracy alongside 4-bit, but 13.3 MB and 30 MB peak memory buy nothing over the student.",
+      "risks": "Largest OTA update and memory footprint on the tablet for no measurable accuracy gain."
+    },
+    {
+      "config": "linear_attention",
+      "verdict": "Do not ship. Slower and less accurate at our input lengths.",
+      "why": "-1.0 pts accuracy (-3.0 pts on notes) and 1.6x slower p95: at ~160 tokens per request, linear attention's O(T) advantage never materializes.",
+      "risks": "Would only pay off for much longer inputs (multi-page documents), which we have not benchmarked."
+    }
+  ]
+}
