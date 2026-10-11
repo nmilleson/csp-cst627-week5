@@ -1,0 +1,46 @@
+{
+  "run_id": "eecf0fdd",
+  "config": "baseline",
+  "variant_type": "baseline",
+  "description": "4-layer softmax-attention transformer, FP32",
+  "trials": 5,
+  "warmup": 50,
+  "n_requests": 2493,
+  "accuracy": {
+    "median": 0.8813,
+    "std": 0.0
+  },
+  "acc_synthetic_docs": {
+    "median": 0.9637,
+    "std": 0.0
+  },
+  "acc_slurp_notes": {
+    "median": 0.7335,
+    "std": 0.0
+  },
+  "p50_ms": {
+    "median": 2.3955,
+    "std": 0.0779
+  },
+  "p95_ms": {
+    "median": 3.7159,
+    "std": 0.4115
+  },
+  "mean_ms": {
+    "median": 2.6194,
+    "std": 0.1576
+  },
+  "peak_mem_mb": {
+    "median": 29.78,
+    "std": 0.0
+  },
+  "weights_mem_mb": 13.32,
+  "checkpoint_mb": 13.34,
+  "precision": "fp32",
+  "params_total": 3491856,
+  "params_non_embedding": 3163664,
+  "device": "Tesla T4",
+  "torch_version": "2.11.0+cu130",
+  "cuda_version": "13.0",
+  "python_version": "3.13.15"
+}

@@ -1,0 +1,75 @@
+{
+  "config": "distilled_student",
+  "seed": 627,
+  "params_total": 562960,
+  "params_non_embedding": 398864,
+  "train_tokens": 24060960,
+  "train_examples_per_epoch": 11426,
+  "epochs": 12,
+  "teacher": "baseline",
+  "best_val_acc": 0.8972136222910216,
+  "train_time_s": 161.7,
+  "device": "Tesla T4",
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 4.54772366691568,
+      "val_acc": 0.5678018575851393
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.506765265205053,
+      "val_acc": 0.7560371517027864
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.7859925027083419,
+      "val_acc": 0.8160990712074303
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.5728434556522849,
+      "val_acc": 0.8470588235294118
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.4450967443076758,
+      "val_acc": 0.8631578947368421
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.3801390052741841,
+      "val_acc": 0.8767801857585139
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.32372022380625737,
+      "val_acc": 0.8854489164086687
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.2933008567893139,
+      "val_acc": 0.886687306501548
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.26825975339505925,
+      "val_acc": 0.8953560371517028
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.24839036395596392,
+      "val_acc": 0.8934984520123839
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.23838672564266114,
+      "val_acc": 0.8972136222910216
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.2376124209635917,
+      "val_acc": 0.8947368421052632
+    }
+  ]
+}

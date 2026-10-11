@@ -1,0 +1,46 @@
+{
+  "run_id": "3d0f40a4",
+  "config": "quant_4bit",
+  "variant_type": "quantized",
+  "description": "Baseline weights quantized post-training to 4-bit NF4 (bitsandbytes), FP16 compute",
+  "trials": 5,
+  "warmup": 50,
+  "n_requests": 2493,
+  "accuracy": {
+    "median": 0.8813,
+    "std": 0.0
+  },
+  "acc_synthetic_docs": {
+    "median": 0.9625,
+    "std": 0.0
+  },
+  "acc_slurp_notes": {
+    "median": 0.7357,
+    "std": 0.0
+  },
+  "p50_ms": {
+    "median": 5.0262,
+    "std": 0.1058
+  },
+  "p95_ms": {
+    "median": 7.2712,
+    "std": 0.1292
+  },
+  "mean_ms": {
+    "median": 5.2132,
+    "std": 0.1147
+  },
+  "peak_mem_mb": {
+    "median": 19.35,
+    "std": 0.0
+  },
+  "weights_mem_mb": 2.91,
+  "checkpoint_mb": 2.93,
+  "precision": "nf4 weights / fp16 compute",
+  "params_total": 3491856,
+  "params_non_embedding": 3163664,
+  "device": "Tesla T4",
+  "torch_version": "2.11.0+cu130",
+  "cuda_version": "13.0",
+  "python_version": "3.13.15"
+}
